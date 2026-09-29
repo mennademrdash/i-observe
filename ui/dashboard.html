@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>I-observe &middot; Video Intelligence Console</title>
+<style>
+  :root{--bg:#080d17;--panel:#101827;--panel2:#162237;--line:#26364d;--txt:#eaf1ff;--muted:#9aabc3;
+        --accent:#70a7ff;--accent2:#7e78ff;--ok:#35d7a0;--warn:#ffbd69;--err:#ff6b82;--glow:rgba(112,167,255,.14)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(ellipse at 72% -20%,rgba(74,92,190,.18),transparent 42%),var(--bg);color:var(--txt);font:14px/1.55 "Segoe UI",Inter,system-ui,sans-serif;display:flex;min-height:100vh}
+  aside{width:238px;flex:0 0 238px;background:rgba(16,24,39,.92);backdrop-filter:blur(14px);border-right:1px solid var(--line);padding:18px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .brand{padding:0 20px 16px;border-bottom:1px solid var(--line);margin-bottom:12px}
+  .brand h1{font-size:20px;letter-spacing:.5px}.brand h1 span{color:var(--accent)}
+  .brand p{font-size:10.5px;color:var(--muted);margin-top:3px;letter-spacing:.4px}
+  nav a{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--muted);text-decoration:none;font-size:13.5px;border-left:2px solid transparent;cursor:pointer}
+  nav a{transition:background .18s ease,color .18s ease,padding-left .18s ease}nav a:hover{background:var(--panel2);color:var(--txt);padding-left:24px}nav a.on{color:var(--txt);border-left-color:var(--accent);background:linear-gradient(90deg,var(--glow),transparent)}
+  nav a .ic{width:16px;text-align:center;opacity:.85}
+  nav .lbl{padding:14px 20px 6px;font-size:10px;letter-spacing:1.2px;color:#5d6b7e;text-transform:uppercase}
+  main{flex:1;padding:26px clamp(16px,3vw,38px);max-width:1680px;margin:0 auto;width:100%}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+  header h2{font-size:20px}.sub{font-size:12px;color:var(--muted)}
+  .pill{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid var(--line);color:var(--muted);background:var(--panel)}
+  .grid{display:grid;gap:13px;margin-bottom:16px}.g4{grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  .card{background:linear-gradient(145deg,rgba(18,29,47,.96),rgba(15,23,37,.96));border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:0 8px 24px rgba(0,0,0,.12);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+  .card:hover{border-color:rgba(112,167,255,.34);box-shadow:0 12px 30px rgba(0,0,0,.19)}
+  .card h3{font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600}
+  .stat{font-size:25px;font-weight:600}.stat.sm{font-size:19px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
+  .ok{background:var(--ok);box-shadow:0 0 8px rgba(61,220,132,.5)}.warn{background:var(--warn);box-shadow:0 0 8px rgba(255,182,72,.5)}
+  .err{background:var(--err);box-shadow:0 0 8px rgba(255,92,108,.5)}.na{background:#55606f}
+  .badge{font-size:10.5px;padding:2px 8px;border-radius:4px;font-weight:600;letter-spacing:.4px;white-space:nowrap;display:inline-block}
+  .b-ok{background:rgba(61,220,132,.14);color:var(--ok)}.b-warn{background:rgba(255,182,72,.14);color:var(--warn)}
+  .b-err{background:rgba(255,92,108,.14);color:var(--err)}.b-na{background:rgba(139,155,176,.14);color:var(--muted)}
+  input,select,textarea,button{font-family:inherit;font-size:13.5px}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);padding:9px 11px;border-radius:7px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  button{background:linear-gradient(110deg,var(--accent),#8d8aff);color:#07101e;border:0;padding:10px 18px;border-radius:9px;font-weight:700;cursor:pointer;box-shadow:0 5px 16px rgba(112,167,255,.16);transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+  button:hover{filter:brightness(1.1)}button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px;letter-spacing:.5px;text-transform:uppercase}
+  .field{margin-bottom:12px}.inline{display:flex;gap:10px;align-items:flex-end}.inline>div{flex:1}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;padding:7px 8px;border-bottom:1px solid var(--line);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;position:sticky;top:0;background:var(--panel)}
+  td{padding:7px 8px;border-bottom:1px solid rgba(36,48,64,.45)}
+  tr.clickable{cursor:pointer}tr.clickable:hover td{background:rgba(24,32,48,.6)}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .empty{color:var(--muted);font-style:italic;padding:14px 0;text-align:center;font-size:13px}
+  .msg{padding:10px 12px;border-radius:7px;font-size:13px;margin-top:10px;display:none}.msg.s{display:block}
+  .msg.ok{background:rgba(61,220,132,.1);border:1px solid rgba(61,220,132,.3);color:var(--ok)}
+  .msg.err{background:rgba(255,92,108,.1);border:1px solid rgba(255,92,108,.3);color:var(--err)}
+  .msg.info{background:rgba(77,163,255,.1);border:1px solid rgba(77,163,255,.3);color:var(--accent)}
+  .view{display:none}.view.on{display:block;animation:pageIn .28s ease both}
+  video,img{max-width:100%;border-radius:8px;background:#000;display:block}
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px;max-height:430px;overflow:auto}
+  .thumbs a{display:block;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel2);cursor:pointer}
+  .thumbs img{width:100%;height:95px;object-fit:cover}
+  .thumbs .cap{font-size:10px;padding:4px 6px;color:var(--muted)}
+  a{color:var(--accent)}.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(4,18,31,.3);border-top-color:#04121f;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px;border-bottom:1px solid rgba(36,48,64,.4)}
+  .kv:last-child{border-bottom:0}.kv span:first-child{color:var(--muted);flex:0 0 auto}
+  .kv span:last-child{text-align:right;word-break:break-word}
+  .cliplist{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}
+  .cliplist .it{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--panel2)}
+  .cliplist video{margin-top:7px;max-height:190px}
+  .scroll{max-height:470px;overflow:auto}
+  #qText{padding:13px 14px;font-size:15px}
+  .rowline{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(36,48,64,.4)}
+  .rowline:last-child{border-bottom:0}
+  .rowline img{width:120px;height:80px;object-fit:cover;border-radius:6px;flex:0 0 auto}
+  .welcome{position:relative;overflow:hidden;margin-bottom:16px;padding:22px;border:1px solid rgba(112,167,255,.25);border-radius:16px;background:linear-gradient(115deg,rgba(36,67,117,.62),rgba(39,43,91,.42) 55%,rgba(16,24,39,.86));}
+  .welcome:after{content:"";position:absolute;width:220px;height:220px;right:-55px;top:-125px;border-radius:50%;background:rgba(135,130,255,.2);filter:blur(3px);pointer-events:none}
+  .welcome h3{font-size:20px;color:var(--txt);letter-spacing:0;text-transform:none;margin-bottom:5px}.welcome p{color:#c2cee2;max-width:850px}
+  .quick-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.quick-actions button{position:relative;z-index:1}
+  .helper{padding:10px 12px;margin:0 0 13px;border:1px solid rgba(112,167,255,.17);border-radius:10px;background:rgba(112,167,255,.055);color:#bac9df;font-size:12.5px}
+  .helper strong{color:#e8efff}.notice{padding:12px 14px;margin-bottom:14px;border-radius:11px;font-size:13px}
+  #liveDock{display:none;position:fixed;right:18px;bottom:18px;width:min(360px,calc(100vw - 28px));z-index:90;padding:9px;border:1px solid rgba(112,167,255,.52);border-radius:14px;background:rgba(9,15,26,.96);box-shadow:0 18px 55px rgba(0,0,0,.55);backdrop-filter:blur(14px);animation:pageIn .22s ease both}
+  body.camera-docked #liveDock{display:block}#liveDockHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 7px;font-size:10px;letter-spacing:.8px;color:var(--ok);font-weight:700}
+  #liveDockHead span:first-child{display:flex;align-items:center;gap:7px}#liveDockHead .dot{animation:pulse 1.6s infinite}
+  #liveDockStop{padding:3px 9px;border-radius:7px;background:transparent;color:var(--muted);border:1px solid var(--line);box-shadow:none;font-size:12px}
+  #liveDock #liveView{width:100%;aspect-ratio:16/10!important;border:1px solid var(--line)}
+  #liveDock #camHint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px!important;font-size:10px}
+  @keyframes pulse{50%{box-shadow:0 0 0 5px rgba(53,215,160,.13)}}
+  .notice.warn{background:rgba(255,189,105,.09);border:1px solid rgba(255,189,105,.3);color:#ffd9a9}
+  .notice.info{background:rgba(112,167,255,.08);border:1px solid rgba(112,167,255,.23);color:#c9d8f1}
+  .step{display:flex;gap:10px;align-items:flex-start;margin:7px 0}.step b{color:var(--accent);min-width:22px}
+  .pill{backdrop-filter:blur(8px)}
+  @keyframes pageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media(max-width:800px){body{display:block}aside{width:100%;height:auto;position:sticky;z-index:10;padding:10px 0;border-right:0;border-bottom:1px solid var(--line)}.brand{padding:0 14px 8px;margin-bottom:6px}nav{display:flex;overflow:auto;white-space:nowrap}nav .lbl{display:none}nav a{padding:9px 12px;border-left:0;border-bottom:2px solid transparent}nav a:hover{padding-left:12px}nav a.on{border-bottom-color:var(--accent)}main{padding:18px 12px}.g2,.g3{grid-template-columns:1fr}.inline{flex-wrap:wrap}.inline>div{min-width:140px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand"><h1>I<span>-</span>observe</h1><p>VIDEO INTELLIGENCE CONSOLE</p></div>
+  <nav id="nav">
+    <div class="lbl">Overview</div>
+    <a href="#dashboard" data-v="dashboard" class="on"><span class="ic">D</span>Dashboard</a>
+    <a href="#status" data-v="status"><span class="ic">S</span>System Status</a>
+    <div class="lbl">Live</div>
+    <a href="#live" data-v="live"><span class="ic">C</span>Live Camera</a>
+    <a href="#enroll" data-v="enroll"><span class="ic">+</span>Enroll Person</a>
+    <div class="lbl">Analysis</div>
+    <a href="#events" data-v="events"><span class="ic">E</span>Events</a>
+    <a href="#evidence" data-v="evidence"><span class="ic">G</span>Evidence</a>
+    <a href="#recordings" data-v="recordings"><span class="ic">R</span>Live Recordings</a>
+    <div class="lbl">Query</div>
+    <a href="#ask" data-v="ask"><span class="ic">?</span>Ask I-observe</a>
+  </nav>
+</aside>
+<main>
+  <header><div><h2 id="pgTitle">Dashboard</h2><p class="sub" id="pgSub"></p></div><div class="pill" id="clock">--</div></header>
+
+  <!-- DASHBOARD -->
+  <section class="view on" id="v-dashboard">
+    <div class="welcome">
+      <h3>Welcome to I-Observe</h3>
+      <p>حوّل الكاميرا أو الفيديو لأحداث قابلة للبحث. النظام يكتشف الوجوه، يحاول مطابقة الهوية، يحفظ الأدلة، وبعدها تقدر تسأله بلغة طبيعية. كل إجابة لازم ترجع لحدث مسجّل — لو مفيش بيانات، هيقولك بصراحة.</p>
+      <div class="quick-actions"><button type="button" data-open-page="live">Open live camera</button><button type="button" class="ghost" data-open-page="enroll">Enroll a person</button><button type="button" class="ghost" data-open-page="ask">Ask about events</button></div>
+    </div>
+    <div class="notice info"><strong>How it works:</strong> Camera/video → YOLO face detection &amp; landmarks → MiniFASNet liveness signal → 512-D ArcFace match in TurboVec → event/evidence in the database. Similarity is a match score, not a probability.</div>
+    <div class="grid g4">
+      <div class="card"><h3>Total Events</h3><div class="stat" id="cEvents">--</div><div class="sub">event timeline</div></div>
+      <div class="card"><h3>Face Detections</h3><div class="stat" id="cFaces">--</div><div class="sub">faces seen</div></div>
+      <div class="card"><h3>Identified</h3><div class="stat" id="cIdent">--</div><div class="sub">matched an identity</div></div>
+      <div class="card"><h3>Unknown</h3><div class="stat" id="cUnk">--</div><div class="sub">unknown or rejected</div></div>
+      <div class="card"><h3>Live</h3><div class="stat" id="cLive">--</div><div class="sub">last analysis</div></div>
+      <div class="card"><h3>Spoof Rejected</h3><div class="stat" id="cSpoof">--</div><div class="sub">last analysis</div></div>
+      <div class="card"><h3>Evidence</h3><div class="stat" id="cEv">--</div><div class="sub" id="cEvS">images + clips</div></div>
+      <div class="card"><h3>Identities</h3><div class="stat" id="cIdents">--</div><div class="sub">in TurboVec ArcFace index</div></div>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Services</h3><div id="svcMini"></div></div>
+      <div class="card"><h3>Latest Action (VideoMAE)</h3><div id="lastAction" class="empty">NO DATA</div></div>
+      <div class="card"><h3>Max Similarity</h3><div class="stat" id="maxSim">--</div><div class="sub">highest identity score</div></div>
+    </div>
+    <div class="card"><h3>Recent Events</h3><div class="scroll"><table id="dashEv"><thead><tr><th>Time</th><th>Person</th><th>Action</th><th>Conf</th><th>Evidence</th></tr></thead><tbody></tbody></table></div></div>
+  </section>
+
+  <!-- SYSTEM STATUS -->
+  <section class="view" id="v-status">
+    <div class="notice warn"><strong>Security note:</strong> Anti-spoof is loaded but did not pass the local spoof sample check. Treat “live” as an unverified model signal; do not use this demo for access decisions.</div>
+    <div class="grid g2">
+      <div class="card"><h3>Component Health</h3><div id="svcFull"></div></div>
+      <div class="card"><h3>Runtime Configuration</h3><div id="cfgFull" class="mono sub">--</div></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="card"><h3>Enrolled Identities (TurboVec)</h3><div id="idFull" class="empty">--</div></div>
+      <div class="card"><h3>VLM (Vision Language Model)</h3>
+        <div class="field"><label>Reply language</label>
+          <select id="vlmLang">
+            <option value="">English (default)</option>
+            <option value="Egyptian Arabic slang">Egyptian Arabic slang</option>
+            <option value="Levantine Arabic slang">Levantine Arabic slang</option>
+            <option value="Gulf Arabic slang">Gulf Arabic slang</option>
+            <option value="Iraqi Arabic slang">Iraqi Arabic slang</option>
+            <option value="Modern Standard Arabic">Modern Standard Arabic</option>
+          </select></div>
+        <div id="vlmBox" class="sub">--</div>
+        <div class="inline" style="margin-top:10px"><div style="flex:0 0 auto"><button class="ghost" id="vlmTest">RUN ONE REAL VLM REQUEST</button></div></div>
+        <div class="msg" id="mVlm">The key is read from the process environment only. Press the button to prove the provider actually answers.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE CAMERA -->
+  <section class="view" id="v-live">
+    <div class="helper"><strong>What happens:</strong> Start Camera asks the browser for camera permission. Frames are sent to the server for face detection, liveness scoring and identity matching. Turn on recording to save timestamped observations and evidence. A similarity score is not a confidence probability.</div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Camera - Automatic Detection and Recognition (single live view)</h3>
+        <div id="liveView" style="position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:16/9">
+          <video id="cam" playsinline muted autoplay style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"></video>
+          <div id="liveStage" style="position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;background:#0b0f14;z-index:2">Click START CAMERA to begin the live stream</div>
+        </div>
+        <div class="sub" id="camHint" style="margin-top:8px">Waiting for camera...</div>
+        <div class="inline" style="margin-top:12px">
+          <div><button id="camStart">START CAMERA</button></div>
+          <div><button class="ghost" id="camStop" disabled>STOP CAMERA</button></div>
+          <div style="flex:0 0 auto"><span class="badge b-na" id="recBadge">NOT RECORDING</span></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>Minimum gap between detections (lower is faster)</label>
+          <select id="camInt">
+            <option value="0" selected>As fast as possible</option>
+            <option value="100">100ms</option>
+            <option value="250">250ms</option>
+            <option value="500">500ms</option>
+            <option value="1000">1s</option>
+          </select></div>
+        <div class="sub" id="fpsHint" style="margin-top:6px"></div>
+        <div class="msg" id="mCam">Detection, recognition and recording all start automatically when the camera starts. Every observation is saved with the current date and time.</div>
+      </div>
+      <div class="card">
+        <h3>Live Result <span class="sub" id="liveWho" style="float:right"></span></h3>
+        <div id="liveStats" class="grid g4" style="margin-bottom:12px"></div>
+        <div id="liveDet"></div>
+        <h3 style="margin-top:16px">Live Session Log</h3>
+        <div class="scroll" style="max-height:200px"><table id="liveT"><thead><tr><th>Time</th><th>Person</th><th>Score</th><th>Liveness</th><th>VLM</th></tr></thead><tbody><tr><td colspan="5" class="empty">NO DATA</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENROLL -->
+  <section class="view" id="v-enroll">
+    <div class="helper"><strong>Enrollment tips:</strong> Use a consented identity name and several clear photos of the same person. Each image must contain exactly one face. Accepted photos become separate 512-D templates; rejected files are reported. Avoid group photos, blur and heavy occlusion.</div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Enroll Person</h3>
+        <div class="field"><label>Person Name</label><input id="enName" placeholder="e.g. menna" /></div>
+        <div class="field"><label>Upload Face Images</label><input type="file" id="enFiles" accept="image/*" multiple /></div>
+        <div class="field"><label>&nbsp;</label><button class="ghost" id="enCam" disabled>CAPTURE FROM CAMERA</button></div>
+        <div class="msg" id="mEnroll">Add 2-4 clear photos of the same person. Each must contain exactly one detectable face.</div>
+        <div><button id="enBtn" style="margin-top:12px">ENROLL PERSON</button></div>
+        <div class="msg" id="mEnrollR"></div>
+      </div>
+      <div class="card"><h3>Enrolled Identities (TurboVec)</h3><div id="enList" class="empty">--</div></div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="view" id="v-events">
+    <div class="helper"><strong>Find saved activity:</strong> Events are read from the configured event store. Choose an identity or color, then search. “Recorded At” is the real local time; the evidence and clip links open the underlying media when available.</div>
+    <div class="card">
+      <h3>Event Timeline</h3>
+      <div class="inline" style="margin-bottom:12px">
+        <div><label>Person (identity)</label><select id="evIdent"><option value="">Everyone</option></select></div>
+        <div><label>Search person name</label><input id="evName" placeholder="e.g. menna" /></div>
+        <div><label>Shirt colour (optional)</label><select id="evColor"><option value="">All</option><option>black</option><option>white</option><option>gray</option><option>red</option><option>green</option><option>blue</option></select></div>
+        <div style="flex:0 0 auto"><button id="evBtn" class="ghost">SEARCH</button></div>
+        <div style="flex:0 0 auto"><button id="evMine" class="ghost">MY EVENTS</button></div>
+      </div>
+      <div class="msg" id="mEv"></div>
+      <div class="scroll"><table id="evT"><thead><tr><th>Recorded At</th><th>Person</th><th>Action</th><th>Conf</th><th>Source</th><th>Evidence</th><th>Clip</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card" id="evDetail" style="display:none">
+      <h3>Event Detail</h3><div id="evDetailBody"></div>
+    </div>
+  </section>
+
+  <!-- EVIDENCE -->
+  <section class="view" id="v-evidence">
+    <div class="helper"><strong>Evidence is the source of truth:</strong> Images and clips come from processed observations, not AI-generated pictures. Open an item to inspect the saved frame/clip and compare its timestamp with the event.</div>
+    <div class="card" style="margin-bottom:14px">
+      <h3>Filter Evidence</h3>
+      <div class="inline">
+        <div><label>Person (identity)</label><select id="fIdent"><option value="">Everyone</option></select></div>
+        <div><label>Source session</label><select id="fSess"><option value="">All sessions</option></select></div>
+        <div style="flex:0 0 auto"><button class="ghost" id="fBtn">APPLY</button></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <h3>Evidence Images <span class="sub" id="evImgN" style="float:right"></span></h3>
+      <div class="thumbs" id="evImgs"><div class="empty">NO DATA - run an analysis or start the live camera</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <h3>Evidence Clips <span class="sub" id="evClipN" style="float:right"></span></h3>
+      <div class="cliplist" id="evClips"><div class="empty">NO DATA - no clips yet</div></div>
+    </div>
+    <div class="card" id="evPrevWrap" style="display:none">
+      <h3 id="evPrevT">Preview</h3><div id="evPrev"></div>
+    </div>
+  </section>
+
+  <!-- RECORDINGS -->
+  <section class="view" id="v-recordings">
+    <div class="helper"><strong>Sessions:</strong> Start and stop a Live Camera session to create a named recording window. This page lists captured evidence and time span; it does not mean every frame is stored as an event.</div>
+    <div class="card">
+      <h3>Recorded Live Sessions</h3>
+      <p class="sub" style="margin-bottom:12px">Every live-camera session, how many frames it captured and when it ran. Ask about one by date.</p>
+      <div id="recList"><div class="empty">NO DATA - start the Live Camera to create a recording</div></div>
+    </div>
+  </section>
+
+  <!-- ASK -->
+  <section class="view" id="v-ask">
+    <div class="helper"><strong>Ask using recorded evidence:</strong> Try <span dir="auto">“مين ظهر النهارده؟”</span>, <span dir="auto">“منة ظهرت امتى؟”</span>, <span dir="auto">“في فيديو لمنة؟”</span>, or ask about an action. Answers use retrieved events and show matching evidence; they cannot infer what was not recorded.</div>
+    <div class="card" style="margin-bottom:14px">
+      <h3>Ask I-observe</h3>
+      <textarea id="qText" rows="2" placeholder="Ask something about the video or the live camera...">What was the person in red doing between 0:00 and 0:20?</textarea>
+      <div class="inline" style="margin-top:10px">
+        <div style="flex:0 0 auto"><button id="qBtn">ASK</button></div>
+        <div style="flex:0 0 auto"><span class="sub">try:
+          <a href="#" data-q="مين ظهر النهارده؟">مين ظهر النهارده؟</a> -
+          <a href="#" data-q="منة ظهرت امتى؟">منة ظهرت امتى؟</a> -
+          <a href="#" data-q="في فيديو لمنة؟">في فيديو لمنة؟</a> -
+          <a href="#" data-q="منة كانت بتعمل ايه؟">منة كانت بتعمل ايه؟</a> -
+          <a href="#" data-q="what did you see today?">what did you see today?</a> -
+          <a href="#" data-q="what happened yesterday?">yesterday</a> -
+          <a href="#" data-q="who was wearing black at 00:05?">black at 00:05</a> -
+          <a href="#" data-q="what did you see in the last 2 hours?">last 2 hours</a></span></div>
+      </div>
+      <div class="msg" id="mAsk"></div>
+    </div>
+    <div class="card">
+      <h3>Answer</h3>
+      <div id="qOut" class="empty">Ask a question to search the event timeline.</div>
+      <div class="grid g4" id="qMeta" style="margin-top:14px"></div>
+      <h3 style="margin-top:16px">Relevant Events</h3><div id="qEv" class="empty">--</div>
+      <h3 style="margin-top:16px">Evidence</h3><div class="grid g2" id="qMedia"></div>
+    </div>
+  </section>
+</main>
+<div id="liveDock" aria-label="Persistent live face detection preview">
+  <div id="liveDockHead"><span><i class="dot ok"></i>LIVE FACE DETECTION</span><button id="liveDockStop" type="button" title="Stop camera">STOP</button></div>
+  <div id="liveDockSlot"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+window.addEventListener('error',e=>console.error('I-Observe UI error:',e.message,e.filename,e.lineno));
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct=v=>v==null?'--':(v*100).toFixed(1)+'%';
+const fmtT=s=>{if(s==null)return'--';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=(s%60).toFixed(1).padStart(4,'0');return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+x;};
+function badge(c,t){return '<span class="badge b-'+c+'">'+t+'</span>';}
+function msg(id,c,t){const e=$(id);e.className='msg s '+c;e.innerHTML=t;}
+const API=async(p,o)=>{const r=await fetch(p,o);const b=await r.text();let j=null;try{j=JSON.parse(b);}catch(e){}
+ if(!r.ok)throw new Error((j&&j.detail)?(typeof j.detail==='string'?j.detail:JSON.stringify(j.detail)):('HTTP '+r.status));return j;};
+
+const T={dashboard:['Dashboard','Live system state and real counters'],
+ status:['System Status','Real health checks for every component'],
+ live:['Live Camera','Browser camera with real detection, liveness and recognition'],
+ enroll:['Enroll Person','Register an identity in the ArcFace 512-D TurboVec index'],
+ events:['Events','Event timeline - click a row for detail'],
+ evidence:['Evidence','Extracted frames and incident clips'],
+ recordings:['Live Recordings','Every recorded live-camera session'],
+ ask:['Ask I-observe','Natural-language questions over the timeline']};
+const liveViewHome=$('#liveView').parentElement,liveHintHome=$('#camHint').parentElement;
+const liveViewNext=$('#camHint'),liveHintNext=$('#camStart').closest('.inline');
+function syncLiveDock(v){
+ const view=$('#liveView'),hint=$('#camHint'),slot=$('#liveDockSlot');
+ if(stream&&v!=='live'){
+  if(view.parentElement!==slot)slot.appendChild(view);
+  if(hint.parentElement!==slot)slot.appendChild(hint);
+  document.body.classList.add('camera-docked');
+ }else{
+  document.body.classList.remove('camera-docked');
+  if(view.parentElement!==liveViewHome)liveViewHome.insertBefore(view,liveViewNext);
+  if(hint.parentElement!==liveHintHome)liveHintHome.insertBefore(hint,liveHintNext);
+ }
+}
+function go(v){if(!$('#v-'+v))return;$$('.view').forEach(x=>x.classList.remove('on'));$('#v-'+v).classList.add('on');
+ $$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+ const t=T[v]||['I-observe',''];$('#pgTitle').textContent=t[0];$('#pgSub').textContent=t[1];location.hash=v;
+ syncLiveDock(v);
+ if(v==='status')loadStatus();
+ if(v==='events')loadEvents();
+ if(v==='evidence')loadEvidence();
+ if(v==='recordings')loadRecordings();
+ if(v==='enroll')loadStatus();}
+// Let real anchor navigation update the hash; hashchange routes the view and
+// also re-docks the camera overlay. This preserves browser keyboard/history behavior.
+$$('[data-open-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.openPage)));
+window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v&&$('#v-'+v))go(v);});
+window.addEventListener('DOMContentLoaded',()=>{const initial=location.hash.slice(1);if(initial&&$('#v-'+initial))go(initial);});
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleString();},1000);
+
+let S=null;
+const SVC=[['Application','api'],['PostgreSQL','postgres'],['TurboVec (ArcFace index)','face_index'],['Evidence Storage','storage'],
+ ['Face Detector + Recognition','face'],['Anti-spoof validation','liveness'],['VideoMAE','videomae']];
+async function loadStatus(){
+ let s=null;
+ try{s=await API('/api/status');}
+ catch(e){$('#svcFull').innerHTML=badge('err','API OFFLINE');$('#svcMini').innerHTML=badge('err','OFFLINE');return;}
+ S=s;
+ $('#svcFull').innerHTML=SVC.map(([label,key])=>{
+   const it=s[key]||{ok:false,detail:''};
+   const unverified=key==='liveness'&&!it.ok;
+   const state=it.ok?'READY':(unverified?'NOT VALIDATED':'OFFLINE');
+   const tone=it.ok?'ok':(unverified?'warn':'na');
+   return '<div class="kv"><span><i class="dot '+tone+'"></i>'+label+'</span>'+badge(tone,state)+'</div>'+
+          '<div class="sub" style="margin-bottom:6px">'+esc(it.detail||'')+'</div>';}).join('');
+ $('#svcMini').innerHTML=[['PostgreSQL','postgres'],['TurboVec','face_index'],['Liveness validation','liveness'],['Storage','storage'],['VLM','vlm']]
+   .map(([l,k])=>{const it=s[k]||{};const unverified=k==='liveness'&&!it.ok;const tone=it.ok?'ok':(unverified?'warn':'na');const state=it.ok?'ONLINE':(unverified?'NOT VALIDATED':(k==='vlm'?'NOT VERIFIED':'UNAVAILABLE'));return '<div class="kv"><span><i class="dot '+tone+'"></i>'+l+'</span>'+badge(tone,state)+'</div>';}).join('');
+ $('#cfgFull').innerHTML=Object.entries(s.config||{}).map(([k,v])=>'<div class="kv"><span>'+esc(k)+'</span><span>'+esc(v)+'</span></div>').join('')||'<span class="empty">none</span>';
+ const idn=s.identities||[];
+ const tbl=idn.length?'<table><thead><tr><th>Identity</th><th>Points</th></tr></thead><tbody>'+idn.map(i=>'<tr><td>'+esc(i.name)+'</td><td class="mono">'+esc(i.points)+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">NO DATA - no identities enrolled yet</div>';
+ $('#idFull').innerHTML=tbl;$('#enList').innerHTML=tbl;
+ const v=s.vlm||{};
+ $('#vlmBox').innerHTML='<div class="kv"><span>Provider</span><span>'+esc(v.label||v.provider||'-')+'</span></div>'+
+  '<div class="kv"><span>Base URL</span><span class="mono">'+esc(v.base_url||'-')+'</span></div>'+
+  '<div class="kv"><span>Model</span><span class="mono">'+esc(v.model||'-')+'</span></div>'+
+  '<div class="kv"><span>Key variable</span><span class="mono">'+esc(v.key_env||'none (local)')+'</span></div>'+
+  '<div class="kv"><span>Key present</span><span>'+(v.key_env?(v.key_present?badge('ok','YES'):badge('na','NOT SET')):badge('na','n/a'))+'</span></div>'+
+  '<div class="kv"><span>Status</span><span>'+badge(v.ok?'ok':'na',v.ok?'READY':'NOT VERIFIED')+'</span></div>'+
+  '<div class="sub" style="margin-top:6px">'+esc(v.detail||'')+'</div>';
+}
+async function loadCounters(){
+ try{
+  const c=await API('/api/counters');
+  $('#cEvents').textContent=c.events;
+  $('#cFaces').textContent=c.face_detections;
+  $('#cIdent').textContent=c.identified;
+  $('#cUnk').textContent=c.unknown;
+  $('#cLive').textContent=c.live;
+  $('#cSpoof').textContent=c.spoof_rejected;
+  $('#cEv').textContent=c.evidence_images+c.evidence_clips;
+  $('#cEvS').textContent=c.evidence_images+' img + '+c.evidence_clips+' clip';
+  $('#cIdents').textContent=c.identities;
+  $('#maxSim').textContent=pct(c.max_similarity);
+  $('#lastAction').innerHTML=c.latest_action?badge('ok',esc(c.latest_action))+
+    '<div class="kv"><span>Confidence</span><span>'+pct(c.latest_action_score)+'</span></div>'+
+    '<div class="kv"><span>At</span><span class="mono">'+esc(c.latest_action_ts)+'</span></div>':'<div class="empty">NO DATA - run an analysis</div>';
+  loadDashEvents();
+ }catch(e){}
+}
+async function loadDashEvents(){
+ try{
+  const j=await API('/api/events?limit=8');
+  $('#dashEv').querySelector('tbody').innerHTML=j.events.length?j.events.map(e=>
+   '<tr class="clickable" data-id="'+esc(e.id)+'"><td class="mono">'+esc(e.recorded_at||e.timestamp_hms)+'</td><td>'+esc(e.identity||'-')+'</td><td>'+esc(e.event_type||'-')+'</td><td>'+pct(e.identity_score)+'</td><td>'+(e.image_url?'<a href="'+esc(e.image_url)+'" target="_blank">view</a>':'-')+'</td></tr>').join('')
+   :'<tr><td colspan="5" class="empty">NO DATA</td></tr>';
+ }catch(e){}
+}
+document.addEventListener('click',e=>{const r=e.target.closest('tr[data-id]');if(r)showEvent(r.dataset.id);});
+
+/* events */
+async function loadEvents(){
+ try{
+  const q=new URLSearchParams();
+  const idv=$('#evIdent').value,nm=$('#evName').value.trim();
+  if(idv)q.set('identity',idv);else if(nm)q.set('identity',nm);
+  if($('#evColor').value)q.set('color',$('#evColor').value);
+  q.set('date',new Date().toLocaleDateString('en-CA'));
+  const j=await API('/api/events?'+q);
+  $('#evT').querySelector('tbody').innerHTML=j.events.length?j.events.map(e=>
+   '<tr class="clickable" data-id="'+esc(e.id)+'"><td class="mono">'+esc(e.recorded_at||e.timestamp_hms)+'</td><td>'+esc(e.identity||'-')+'</td><td>'+esc(e.event_type||'-')+'</td><td>'+pct(e.identity_score)+'</td><td>'+esc(e.source||'-')+'</td><td>'+(e.image_url?'<a href="'+esc(e.image_url)+'" target="_blank">image</a>':'-')+'</td><td>'+(e.clip_url?'<a href="'+esc(e.clip_url)+'" target="_blank">clip</a>':'-')+'</td></tr>').join('')
+   :'<tr><td colspan="7" class="empty">NO DATA - no events for this search</td></tr>';
+  $('#mEv').className='msg';
+ }catch(e){msg('#mEv','err','Failed: '+esc(e.message));}
+}
+$('#evBtn').addEventListener('click',loadEvents);
+$('#evMine').addEventListener('click',()=>{
+ const idn=(S&&S.identities)||[];
+ if(idn.length){$('#evIdent').value=idn[0].name;$('#evName').value='';loadEvents();msg('#mEv','info','Filtered to your events: <b>'+esc(idn[0].name)+'</b>');}
+ else msg('#mEv','info','No enrolled identity yet - use Enroll Person first.');
+});
+async function showEvent(id){
+ try{
+  const e=await API('/api/events/'+encodeURIComponent(id));
+  $('#evDetail').style.display='block';
+  $('#evDetailBody').innerHTML='<div class="grid g4">'+
+   '<div class="card" style="background:var(--panel2)"><h3>Recorded At</h3><div class="stat sm mono">'+esc(e.recorded_at||e.timestamp_hms)+'</div></div>'+
+   '<div class="card" style="background:var(--panel2)"><h3>Person</h3><div class="stat sm">'+esc(e.identity||'-')+'</div></div>'+
+   '<div class="card" style="background:var(--panel2)"><h3>Action</h3><div class="stat sm">'+esc(e.action||e.event_type||'-')+'</div></div>'+
+   '<div class="card" style="background:var(--panel2)"><h3>Confidence</h3><div class="stat sm">'+pct(e.identity_score)+'</div></div></div>'+
+  '<div class="grid g2" style="margin-top:14px"><div>'+(e.image_url?'<img src="'+esc(e.image_url)+'"/>':'<div class="empty">no image</div>')+'</div>'+
+  '<div><div class="kv"><span>Track</span><span>'+esc(e.track_id)+'</span></div>'+
+  '<div class="kv"><span>Shirt colour</span><span>'+esc(e.shirt_color||'-')+'</span></div>'+
+  '<div class="kv"><span>Action confidence</span><span>'+pct(e.action_score)+'</span></div>'+
+  '<div class="kv"><span>Session</span><span class="mono">'+esc(e.session||'-')+'</span></div>'+
+  '<div class="kv"><span>Objects nearby</span><span>'+esc((e.evidence.objects||[]).join(', ')||'-')+'</span></div>'+
+  '<div class="kv"><span>BBox</span><span class="mono">'+esc(JSON.stringify(e.bbox))+'</span></div>'+
+  (e.vlm?'<div class="kv"><span>VLM</span><span>'+esc(e.vlm)+'</span></div>':'')+
+  (e.clip_url?'<div style="margin-top:10px"><video src="'+esc(e.clip_url)+'" controls style="max-height:220px"></video></div>':'')+
+  '</div></div>';
+ }catch(err){msg('#mEv','err','Could not load event: '+esc(err.message));}
+}
+
+/* evidence */
+let EVENTS_CACHE=[];
+async function loadEvidence(){
+ try{
+  const j=await API('/api/events?limit=400');
+  EVENTS_CACHE=j.events;
+  const sess=[...new Set(j.events.map(e=>e.source||'video'))];
+  const fs=$('#fSess'),cur=fs.value;
+  fs.innerHTML='<option value="">All sessions</option>'+sess.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+  if(cur)fs.value=cur;
+  const ids=[...new Set(j.events.map(e=>e.identity).filter(Boolean))].sort();
+  ['#evIdent','#fIdent'].forEach(sel=>{const el=$(sel),c=el.value;
+   el.innerHTML='<option value="">Everyone</option>'+ids.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');if(c)el.value=c;});
+  const fi=$('#fIdent').value,fss=$('#fSess').value;
+  const match=e=>(!fi||e.identity===fi)&&(!fss||(e.source||'video')===fss);
+  const evs=EVENTS_CACHE.filter(match);
+  const wi=evs.filter(e=>e.image_url);
+  $('#evImgN').textContent=wi.length+' item(s)';
+  $('#evImgs').innerHTML=wi.length?wi.map(e=>'<a data-ev="'+esc(JSON.stringify(e))+'"><img loading="lazy" src="'+esc(e.image_url)+'"/><div class="cap"><b>'+esc(e.identity||'unknown')+'</b><br/>'+esc(e.event_type||'')+' - '+esc(e.timestamp_hms||'')+'</div></a>').join('')
+   :'<div class="empty">NO DATA - no evidence images for this filter</div>';
+  const cl=evs.filter(e=>e.clip_url);
+  $('#evClipN').textContent=cl.length+' item(s)';
+  $('#evClips').innerHTML=cl.length?cl.map(e=>'<div class="it"><b class="mono">'+esc(e.clip_url.split('/').pop())+'</b><div class="sub">'+esc(e.identity||'unknown')+' - '+esc(e.event_type||'')+' - '+esc(e.timestamp_hms||'')+'</div><video src="'+esc(e.clip_url)+'" controls preload="metadata"></video></div>').join('')
+   :'<div class="empty">NO DATA - no clips for this filter</div>';
+ }catch(e){$('#evImgs').innerHTML='<div class="empty">unavailable: '+esc(e.message)+'</div>';}
+}
+$('#fBtn').addEventListener('click',loadEvidence);
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-ev]');if(!a)return;
+ let it;try{it=JSON.parse(a.dataset.ev);}catch(x){return;}
+ $('#evPrevWrap').style.display='block';
+ $('#evPrevT').textContent='Evidence - '+(it.timestamp_hms||'');
+ $('#evPrev').innerHTML='<div class="grid g2"><div><img src="'+esc(it.image_url)+'"/></div><div>'+
+  '<div class="kv"><span>Person</span><span>'+esc(it.identity||'-')+'</span></div>'+
+  '<div class="kv"><span>Similarity</span><span>'+pct(it.identity_score)+'</span></div>'+
+  '<div class="kv"><span>Event</span><span>'+esc(it.event_type||'-')+'</span></div>'+
+  '<div class="kv"><span>Timestamp</span><span class="mono">'+esc(it.timestamp_hms||'')+'</span></div>'+
+  '<div class="kv"><span>Recorded</span><span class="mono">'+esc(it.recorded_at||'')+'</span></div>'+
+  '<div class="kv"><span>Source</span><span>'+esc(it.source||'-')+'</span></div>'+
+  (it.vlm?'<div class="kv"><span>VLM</span><span>'+esc(it.vlm)+'</span></div>':'')+'</div></div>';
+});
+
+/* recordings */
+async function loadRecordings(){
+ try{
+  const j=await API('/api/live/recordings');
+  $('#recList').innerHTML=(j.recordings&&j.recordings.length)?j.recordings.map(r=>
+   '<div class="rowline"><img src="'+esc(r.preview)+'"/><div style="flex:1">'+
+   '<div class="kv"><span>Session</span><span class="mono">'+esc(r.session)+(r.recording_now?' '+badge('err','RECORDING NOW'):'')+'</span></div>'+
+   '<div class="kv"><span>Started</span><span class="mono">'+esc(r.started)+'</span></div>'+
+   '<div class="kv"><span>Ended</span><span class="mono">'+esc(r.ended)+'</span></div>'+
+   '<div class="kv"><span>Frames</span><span>'+r.frames+'</span></div>'+
+   '<div class="kv"><span>Duration</span><span>'+r.duration_s+'s</span></div>'+
+   '<div class="kv"><span>Ask</span><span><a href="#" data-q="what did you see on '+esc(r.started.slice(0,10))+'?">what did you see on '+esc(r.started.slice(0,10))+'?</a></span></div>'+
+   '</div></div>').join(''):'<div class="empty">NO DATA - start the Live Camera to create a recording</div>';
+ }catch(e){$('#recList').innerHTML='<div class="empty">unavailable: '+esc(e.message)+'</div>';}
+}
+$$('[data-q]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();$('#qText').value=a.dataset.q;}));
+
+/* ask */
+$('#qBtn').addEventListener('click',async()=>{
+ const q=$('#qText').value.trim();if(!q)return;
+ $('#qBtn').disabled=true;msg('#mAsk','info','<span class="spin"></span>Searching the event timeline...');
+ try{
+  const r=await API('/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+  if(r.total_events===0){$('#qMedia').innerHTML='<div class="empty">NO EVIDENCE for this query</div>';}
+  $('#qOut').innerHTML='<div style="font-size:15px;line-height:1.6">'+esc(r.answer)+'</div>';
+  const w=r.window||{};
+  $('#qMeta').innerHTML=[['Person',esc(r.identity||'-')],['Time window',esc(w.start_hms?w.start_hms+' to '+(w.end_hms||'end'):(w.start_label?w.start_label+' to '+(w.end_label||'now'):'-'))],
+   ['Track',esc(r.track_id||'-')],['Events found',(r.evidence||[]).length]]
+   .map(([k,val])=>'<div class="card" style="background:var(--panel2)"><h3>'+k+'</h3><div class="stat sm">'+val+'</div></div>').join('');
+  const ev=r.evidence||[];
+  $('#qEv').innerHTML=ev.length?'<table><thead><tr><th>Recorded</th><th>Event</th><th>Person</th><th>Action</th><th>VLM</th></tr></thead><tbody>'+ev.map(e=>'<tr><td class="mono">'+esc(e.recorded_at||e.timestamp_hms)+'</td><td>'+esc(e.event_type||'-')+'</td><td>'+esc(e.identity||'-')+'</td><td>'+esc(e.action||'-')+'</td><td>'+esc((e.vlm||'').slice(0,60)||'-')+'</td></tr>').join('')+'</tbody></table>'
+   :'<div class="empty">NO EVIDENCE for this query</div>';
+  const imgs=ev.filter(e=>e.image_url),clips=ev.filter(e=>e.clip_url);
+  $('#qMedia').innerHTML=(imgs.length?imgs.slice(0,4).map(e=>'<div><h3>Evidence '+esc(e.timestamp_hms||'')+'</h3><img src="'+esc(e.image_url)+'"/></div>').join(''):'<div class="empty">NO IMAGE</div>')
+   +(clips.length?clips.slice(0,2).map(e=>'<div><h3>Clip '+esc(e.timestamp_hms||'')+'</h3><video src="'+esc(e.clip_url)+'" controls style="max-height:220px"></video></div>').join(''):'<div class="empty">NO CLIP</div>');
+  msg('#mAsk','ok','Answer generated from the event timeline.');
+ }catch(e){msg('#mAsk','err','Query failed: '+esc(e.message));$('#qOut').innerHTML='<div class="empty">No answer.</div>';}
+ finally{$('#qBtn').disabled=false;}
+});
+
+/* camera - single window: live video as base, boxes drawn on an overlay canvas */
+let stream=null,camTimer=null,recording=false,liveCv=null,camBusy=false,LIVE_FPS=0,LIVE_LAST_T=0;
+let LIVE_MIN_GAP=0,loopBusy=false,ovCv=null,LIVE_FRAMES=0;
+function liveCanvas(){
+ const v=$('#cam');if(!v.videoWidth)return null;
+ if(!liveCv)liveCv=document.createElement('canvas');
+ // 360x360 capture: every stage works at ~112x112 internally, so a 720p frame was
+ // pure upload + decode cost. This is ~3x less pixel work per frame.
+  const w=640,h=Math.max(1,Math.round(v.videoHeight*w/v.videoWidth));
+ liveCv.width=w;liveCv.height=h;
+ liveCv.getContext('2d').drawImage(v,0,0,w,h);return liveCv;
+}
+function drawBoxes(dets){
+ const v=$('#cam');if(!v.videoWidth)return;
+ const view=$('#liveView'),stage=$('#liveStage');
+ if(stage)stage.style.display='none';
+ if(!ovCv){
+  ovCv=document.createElement('canvas');
+  ovCv.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none';
+  view.appendChild(ovCv);
+ }
+ const r=view.getBoundingClientRect();
+ ovCv.width=Math.max(1,Math.round(r.width));ovCv.height=Math.max(1,Math.round(r.height));
+ const ctx=ovCv.getContext('2d');
+ ctx.clearRect(0,0,ovCv.width,ovCv.height);
+ // the video uses object-fit:cover, which CROPS; map coordinates through the same
+ // centre-crop transform so the box lands on the face instead of drifting
+ const va=v.videoWidth/v.videoHeight,ca=ovCv.width/ovCv.height;
+ let sw=v.videoWidth,sh=v.videoHeight,ox=0,oy=0;
+ if(va>ca){sw=v.videoHeight*ca;ox=(v.videoWidth-sw)/2;}
+ else{sh=v.videoWidth/ca;oy=(v.videoHeight-sh)/2;}
+ const sx=ovCv.width/sw,sy=ovCv.height/sh;
+ // Detector boxes refer to the 480px upload canvas, while this overlay is laid
+ // over the camera's native-resolution video. Scale each axis before object-fit crop.
+ const uploadW=liveCv?.width||v.videoWidth,uploadH=liveCv?.height||v.videoHeight;
+ const frameScaleX=v.videoWidth/uploadW,frameScaleY=v.videoHeight/uploadH;
+ dets.forEach(d=>{
+  if(!d.bbox)return;
+  const b=d.bbox,x1=b[0]*frameScaleX,y1=b[1]*frameScaleY,x2=b[2]*frameScaleX,y2=b[3]*frameScaleY;
+  const X=(x1-ox)*sx,Y=(y1-oy)*sy,W=(x2-x1)*sx,H=(y2-y1)*sy;
+  const known=d.identity&&['unknown','rejected_spoof','spoof_rejected','align_error','no_face'].indexOf(d.identity)===-1;
+  const col=d.live===false?'#ff5c6c':(known?'#3ddc84':'#00b4ff');
+  ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.strokeRect(X,Y,W,H);
+  const faceTrack=d.kind==='person'?'':(d.track_id!=null?'#'+d.track_id+' · ':'');
+  const tag=d.kind==='person'?'#'+d.track_id+' · '+(d.identity||'person')+' · '+(d.shirt_color||'clothing ?'):
+   faceTrack+(d.live===false?(d.liveness_error?'UNVERIFIED · ':'NOT LIVE · '):'')+(d.identity||'unknown')+' '+(d.score!=null?(d.score*100).toFixed(0)+'%':'');
+  const sub=d.kind==='person'?'movement: '+(d.action||'unknown'):'live='+(d.liveness_score!=null?(d.liveness_score*100).toFixed(0)+'%':'-');
+  ctx.font='600 13px Segoe UI, sans-serif';
+  const w1=ctx.measureText(tag).width,w2=ctx.measureText(sub).width;
+  const bw=Math.max(w1,w2)+12,bh=40;
+  ctx.fillStyle='rgba(6,10,16,.75)';
+  const tagX=Math.max(0,Math.min(X,ovCv.width-bw)),tagY=Math.max(0,Y-bh);
+  ctx.fillRect(tagX,tagY,bw,bh);
+  ctx.fillStyle=col;ctx.fillText(tag,tagX+6,Math.max(13,tagY+16));
+  ctx.font='11px Segoe UI, sans-serif';ctx.fillStyle='#c8d4e2';
+  ctx.fillText(sub,tagX+6,Math.max(30,tagY+31));
+ });
+}
+function pushLiveRow(d){
+ const tb=$('#liveT').querySelector('tbody');
+ if(tb.querySelector('.empty'))tb.innerHTML='';
+ const tr=document.createElement('tr');
+ tr.innerHTML='<td class="mono">'+esc(d.at)+'</td><td>'+esc(d.identity)+'</td><td>'+pct(d.score)+'</td><td>'+(d.live?badge('ok','LIVE '+pct(d.liveness_score)):badge('err','SPOOF'))+'</td><td>'+esc((d.vlm||'').slice(0,70)||'-')+'</td>';
+ tb.prepend(tr);
+ while(tb.children.length>40)tb.lastChild.remove();
+}
+async function detectFrame(){
+ if(camBusy)return;
+ const c=liveCanvas();
+ if(!c){$('#camHint').textContent='Camera stream has no frames yet.';return;}
+ camBusy=true;
+ try{
+  const startedAt=performance.now();
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));
+  if(!blob)return;
+  const fd=new FormData();fd.append('image',blob,'capture.jpg');fd.append('annotate','false');
+  const r=await API(recording?'/api/live/observe':'/api/camera/detect',{method:'POST',body:fd});
+  if(r.face_count!=null&&r.face_count===0)$('#liveWho').innerHTML='Recognised: <b>no face detected</b>';
+  if(recording&&r.recorded===0&&r.face_count>0)$('#camHint').textContent='Detected '+r.face_count+' face(s); no event saved. Check liveness/backend status.';
+    const det=r.detections||(r.last?[r.last]:[]);
+    (r.scene?.tracks||[]).forEach(p=>det.push({kind:'person',bbox:p.bbox,track_id:p.track_id,
+      identity:p.identity||('track '+p.track_id),shirt_color:p.shirt_color,action:p.action,
+      score:p.identity_score,live:undefined}));
+  drawBoxes(det);
+  $('#camHint').textContent=det.length
+   ?'Live stream - '+det.length+' face(s) - '+Math.round(performance.now()-startedAt)+' ms - '+new Date().toLocaleTimeString()
+   :'Live stream - no face in frame - '+new Date().toLocaleTimeString();
+  const me=det.filter(d=>d.identity&&['unknown','spoof_rejected','rejected_spoof','align_error','no_face'].indexOf(d.identity)===-1)[0];
+  $('#liveWho').innerHTML='Recognised: <b>'+esc(me?me.identity:(det.length?det[0].identity:'no face'))+'</b>';
+  $('#liveDet').innerHTML=det.length?det.map(d=>'<div class="kv"><span>'+esc(d.identity)+'</span><span>'+pct(d.score)+' - '+(d.live?badge('ok','LIVE '+pct(d.liveness_score)):badge('err','SPOOF'))+'</span></div>').join('')
+   :'<div class="sub">no face in frame</div>';
+  if(r.last)pushLiveRow(r.last);
+  if(recording)$('#liveStats').innerHTML=[['Events Recorded',r.events_recorded],['Session',r.session||'-'],['Frames',LIVE_FRAMES],['',badge('err','RECORDING')]].map(([k,val])=>'<div class="card" style="background:var(--panel2)"><h3>'+k+'</h3><div class="stat sm">'+val+'</div></div>').join('');
+  const now=performance.now();
+  if(LIVE_LAST_T){const dt=(now-LIVE_LAST_T)/1000;LIVE_FPS=LIVE_FPS*0.7+(1/Math.max(dt,0.001))*0.3;
+   $('#fpsHint').innerHTML='Detection speed: <b>'+LIVE_FPS.toFixed(1)+' fps</b> - round trip '+Math.round(dt*1000)+' ms';}
+  LIVE_LAST_T=now;
+ }catch(e){$('#camHint').textContent='Detection error: '+e.message;}
+ finally{camBusy=false;}
+}
+function loop(){
+ clearTimeout(camTimer);
+ if(!stream)return;
+ // Wait for real video dimensions before the first capture. Spinning on a 0ms timer
+ // while videoWidth is still 0 does no work and starves the decoder.
+ const v=$('#cam');
+ if(!v||!v.videoWidth){camTimer=setTimeout(loop,80);return;}
+ camTimer=setTimeout(async()=>{
+  if(loopBusy){camTimer=setTimeout(loop,50);return;}
+  loopBusy=true;
+  try{LIVE_FRAMES++;await detectFrame();}
+  catch(e){$('#camHint').textContent='Detection loop error: '+e.message;}
+  finally{loopBusy=false;if(stream)loop();}
+ },Math.max(0,LIVE_MIN_GAP));
+}
+function setRec(on){recording=on;$('#recBadge').textContent=on?'RECORDING':'NOT RECORDING';$('#recBadge').className='badge b-'+(on?'err':'na');}
+async function startRecordingSession(){
+ try{
+  const s=await API('/api/live/start',{method:'POST'});
+  setRec(true);
+  msg('#mCam','ok','Recording session <b>'+esc(s.session)+'</b> - detection, recognition and saving are automatic. Ask later: <i>"what did you see today?"</i>');
+ }catch(e){
+  // Keep the browser camera and non-recording face detection alive if only the
+  // recording API failed. Do not claim recording is enabled.
+  setRec(false);
+  msg('#mCam','err','Detection is running, but recording could not start: '+esc(e.message));
+ }
+}
+$('#camStart').addEventListener('click',async()=>{
+ if(stream)return;
+ $('#camStart').disabled=true;
+ try{
+  const v=$('#cam');
+  stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
+  LIVE_FRAMES=0;
+  v.srcObject=stream;v.style.display='block';
+  // don't await play() on the critical path: start detecting as soon as frames exist
+  v.play().catch(()=>{});
+  $('#camStop').disabled=false;$('#enCam').disabled=false;
+  // Hide the placeholder the moment the stream starts, otherwise its opaque
+  // background sits on top of the video and the panel just looks black.
+  const st=$('#liveStage'); if(st) st.style.display='none';
+  $('#camHint').textContent='Live stream running - starting detection...';
+  // Fire-and-forget the recording session so the first frame is analysed immediately
+  // instead of waiting on a round trip.
+  setRec(false);
+  startRecordingSession();
+  loop();
+ }catch(e){msg('#mCam','err','Camera unavailable: '+esc(e.message));}
+ finally{$('#camStart').disabled=!!stream;}
+});
+$('#camInt').addEventListener('change',e=>{LIVE_MIN_GAP=parseInt(e.target.value,0)||0;if(stream)loop();});
+$('#camStop').addEventListener('click',async()=>{
+ $('#camStart').disabled=false;
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;$('#cam').srcObject=null;clearTimeout(camTimer);}
+ syncLiveDock('live');
+ $('#camStop').disabled=true;
+ if(ovCv){ovCv.getContext('2d').clearRect(0,0,ovCv.width,ovCv.height);}
+ if(recording){const s=await API('/api/live/stop',{method:'POST'});setRec(false);
+  msg('#mCam','ok','Camera stopped. <b>'+s.events_recorded+'</b> observation(s) recorded and saved.');}
+ loadCounters();loadStatus();
+});
+$('#liveDockStop').addEventListener('click',()=>$('#camStop').click());
+
+/* enroll */
+const grabbed=[];
+$('#enCam').addEventListener('click',async()=>{
+ const c=liveCanvas();
+ if(!c){msg('#mEnroll','err','Start the camera in Live Camera first.');return;}
+ const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.92));
+ grabbed.push(new File([blob],'capture_'+(grabbed.length+1)+'.jpg',{type:'image/jpeg'}));
+ msg('#mEnroll','ok','Captured '+grabbed.length+' photo(s) from camera. Enter a name and press ENROLL PERSON.');
+});
+$('#enBtn').addEventListener('click',async()=>{
+ const name=$('#enName').value.trim();
+ const files=Array.from($('#enFiles').files).concat(grabbed);
+ if(!name){msg('#mEnrollR','err','Enter a person name.');return;}
+ if(!files.length){msg('#mEnrollR','err','Upload face images or capture from the camera.');return;}
+ $('#enBtn').disabled=true;msg('#mEnrollR','info','<span class="spin"></span>Enrolling...');
+ try{
+  const fd=new FormData();fd.append('identity',name);
+  for(const f of files)fd.append('images',f,f.name);
+  const r=await API('/enroll',{method:'POST',body:fd});
+  msg('#mEnrollR','ok','<b>ENROLLMENT SUCCESSFUL</b> - '+esc(r.identity)+' using '+r.images_used+' accepted image(s), '+r.dimension+'-D vector stored in TurboVec.'+(r.rejected&&r.rejected.length?(' Rejected: '+r.rejected.length+'.'):''));
+  grabbed.length=0;$('#enFiles').value='';loadStatus();loadCounters();
+ }catch(e){msg('#mEnrollR','err','Enrollment failed: '+esc(e.message));}
+ finally{$('#enBtn').disabled=false;}
+});
+
+/* vlm */
+$('#vlmTest').addEventListener('click',async()=>{
+ $('#vlmTest').disabled=true;
+ const lang=$('#vlmLang').value;
+ msg('#mVlm','info','<span class="spin"></span>Sending one real request'+(lang?' in '+esc(lang):'')+'...');
+ try{
+  const r=await API('/api/vlm/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language:lang})});
+  if(r.ok)msg('#mVlm','ok','<b>READY</b> - '+esc(r.provider)+' / '+esc(r.model)+' responded in '+r.elapsed_s+'s.<br/><b>Reply:</b> '+esc(r.answer));
+  else msg('#mVlm','err','<b>FAILED</b> ('+esc(r.provider)+' / '+esc(r.model)+'): '+esc(r.error));
+ }catch(e){msg('#mVlm','err','Request failed: '+esc(e.message));}
+ finally{$('#vlmTest').disabled=false;loadStatus();}
+});
+
+loadStatus();loadCounters();loadEvidence();
+setInterval(()=>{loadStatus();loadCounters();},15000);
+if(location.hash.slice(1)&&$('#v-'+location.hash.slice(1)))go(location.hash.slice(1));
+</script>
+</body>
+</html>

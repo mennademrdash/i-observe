@@ -1,0 +1,17 @@
+opencv-contrib-python>=4.10.0
+numpy>=1.26.0
+ultralytics>=8.3.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+turbovec==1.0.0
+onnxruntime>=1.20.0
+psycopg[binary]>=3.2.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+prometheus-client>=0.21.0
+minio>=7.2.0
+pytest>=8.3.0
+python-multipart>=0.0.12
+transformers>=4.48.0
+torch>=2.5.0
+av>=14.0.0

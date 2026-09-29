@@ -1,0 +1,49 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Credentials / key material
+*.pem
+*.key
+.pgpass
+
+# Model caches and downloaded weights
+.hf-cache/
+.pip-cache/
+.tmp/
+models/
+yolo11n.pt
+*.onnx
+*.pt
+
+# Datasets and generated artifacts
+data/datasets/
+data/
+evidence/
+clips/
+outputs/
+qdrant_storage/
+*.sqlite
+*.db
+*.mp4
+*.mov
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.codex-presentation-build/
+
+# Diagnostics
+.docker-state-*.txt
+tools/*.log
+tools/*.err
+tools/det.json
+tools/_probe_evidence/

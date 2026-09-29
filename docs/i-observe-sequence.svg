@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1480" viewBox="0 0 1440 1480" role="img" aria-labelledby="title desc">
+  <title id="title">I-Observe Live Face Detection and Tracking Sequence</title>
+  <desc id="desc">Sequence diagram for live camera face detection, recognition, person tracking, PostgreSQL event storage, Redis cache invalidation, and evidence-backed questions.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#9fb5d1"/></marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0 0L10 4L0 8Z" fill="#6ea8fe"/></marker>
+    <style>
+      text{font-family:Segoe UI,Arial,sans-serif;fill:#e7edf7}
+      .title{font-size:30px;font-weight:700}.sub{font-size:15px;fill:#a9bad0}
+      .head{font-size:16px;font-weight:650}.small{font-size:14px;fill:#c8d4e3}
+      .label{font-size:13px;fill:#dce7f4}.box{fill:#151f2d;stroke:#334760;stroke-width:1.5}
+      .life{stroke:#42546b;stroke-width:1.5;stroke-dasharray:7 7}
+      .msg{stroke:#9fb5d1;stroke-width:1.7;marker-end:url(#arrow)}
+      .blue{stroke:#6ea8fe;stroke-width:1.8;marker-end:url(#arrowBlue)}
+      .ret{stroke:#7f93ad;stroke-width:1.5;stroke-dasharray:6 5;marker-end:url(#arrow)}
+      .frame{fill:#111a27;stroke:#4b6687;stroke-width:1.4}
+      .badge{fill:#1b2d43;stroke:#55749b;stroke-width:1}
+    </style>
+  </defs>
+  <rect width="1440" height="1480" fill="#0b111a"/>
+  <text x="48" y="55" class="title">I-Observe — Live Face Detection &amp; Tracking</text>
+  <text x="48" y="83" class="sub">Sequence diagram · live camera, identity matching, person tracking, PostgreSQL events, and evidence-backed Q&amp;A</text>
+
+  <g>
+    <rect x="38" y="112" width="155" height="58" rx="10" class="box"/><text x="115" y="147" text-anchor="middle" class="head">User</text>
+    <rect x="220" y="112" width="190" height="58" rx="10" class="box"/><text x="315" y="147" text-anchor="middle" class="head">Web Dashboard</text>
+    <rect x="445" y="112" width="180" height="58" rx="10" class="box"/><text x="535" y="147" text-anchor="middle" class="head">FastAPI</text>
+    <rect x="660" y="112" width="220" height="58" rx="10" class="box"/><text x="770" y="138" text-anchor="middle" class="head">Face Recognition</text><text x="770" y="157" text-anchor="middle" class="small">YOLO11 · ArcFace · MiniFASNet</text>
+    <rect x="915" y="112" width="205" height="58" rx="10" class="box"/><text x="1017" y="138" text-anchor="middle" class="head">Person Tracking</text><text x="1017" y="157" text-anchor="middle" class="small">YOLO11 COCO · ByteTrack</text>
+    <rect x="1155" y="112" width="135" height="58" rx="10" class="box"/><text x="1222" y="147" text-anchor="middle" class="head">PostgreSQL</text>
+    <rect x="1320" y="112" width="95" height="58" rx="10" class="box"/><text x="1367" y="147" text-anchor="middle" class="head">Redis</text>
+  </g>
+  <g class="life">
+    <path d="M115 170V1390M315 170V1390M535 170V1390M770 170V1390M1017 170V1390M1222 170V1390M1367 170V1390"/>
+  </g>
+
+  <text x="115" y="205" text-anchor="middle" class="label">1</text>
+  <path d="M115 214H315" class="msg"/><text x="215" y="207" text-anchor="middle" class="label">Start Camera</text>
+  <path d="M315 254H535" class="msg"/><text x="425" y="247" text-anchor="middle" class="label">POST /api/live/start</text>
+  <path d="M535 285H315" class="ret"/><text x="425" y="278" text-anchor="middle" class="label">Session ID</text>
+
+  <rect x="202" y="310" width="921" height="590" rx="12" class="frame"/>
+  <rect x="216" y="299" width="148" height="26" rx="8" class="badge"/><text x="290" y="317" text-anchor="middle" class="label">loop: each frame</text>
+  <path d="M315 350H535" class="msg"/><text x="425" y="343" text-anchor="middle" class="label">POST /api/live/observe (image)</text>
+  <path d="M535 391H770" class="blue"/><text x="652" y="384" text-anchor="middle" class="label">Detect faces + landmarks</text>
+  <path d="M770 421H535" class="ret"/><text x="652" y="414" text-anchor="middle" class="label">Face boxes + keypoints</text>
+
+  <rect x="643" y="439" width="260" height="170" rx="10" fill="#172232" stroke="#637c9c" stroke-dasharray="6 4"/>
+  <text x="658" y="461" class="label">loop: each detected face</text>
+  <path d="M535 482H770" class="blue"/><text x="652" y="475" text-anchor="middle" class="label">Liveness estimate</text>
+  <path d="M770 512H535" class="ret"/><text x="652" y="505" text-anchor="middle" class="label">Live signal</text>
+  <path d="M535 544H770" class="blue"/><text x="652" y="537" text-anchor="middle" class="label">Align + ArcFace embedding + TurboVec search</text>
+  <path d="M770 574H535" class="ret"/><text x="652" y="567" text-anchor="middle" class="label">Identity + similarity score</text>
+
+  <path d="M535 635H1017" class="blue"/><text x="776" y="628" text-anchor="middle" class="label">Detect people/objects + ByteTrack</text>
+  <path d="M1017 665H535" class="ret"/><text x="776" y="658" text-anchor="middle" class="label">Person boxes + persistent track IDs</text>
+  <path d="M535 697H770" class="blue"/><text x="652" y="690" text-anchor="middle" class="label">Associate face ↔ person track</text>
+  <path d="M535 729H1017" class="blue"/><text x="776" y="722" text-anchor="middle" class="label">Estimate movement, clothing color, nearby objects</text>
+
+  <rect x="430" y="750" width="680" height="130" rx="10" fill="#18251f" stroke="#4c8064" stroke-dasharray="6 4"/>
+  <rect x="446" y="739" width="182" height="26" rx="8" fill="#20392c" stroke="#4c8064"/><text x="537" y="757" text-anchor="middle" class="label">opt: recording enabled</text>
+  <path d="M535 790H1222" class="msg"/><text x="878" y="783" text-anchor="middle" class="label">Insert observation / evidence metadata</text>
+  <path d="M1222 820H535" class="ret"/><text x="878" y="813" text-anchor="middle" class="label">Commit + read-back verification</text>
+  <path d="M535 850H1367" class="blue"/><text x="950" y="843" text-anchor="middle" class="label">Invalidate cached event/counter reads</text>
+
+  <path d="M535 925H315" class="ret"/><text x="425" y="918" text-anchor="middle" class="label">Detections + tracks + overlay data</text>
+  <path d="M315 955H315" class="msg"/><text x="325" y="949" class="label">Draw moving face/person boxes + track ID</text>
+
+  <path d="M115 1020H315" class="msg"/><text x="215" y="1013" text-anchor="middle" class="label">Ask about a person / event</text>
+  <path d="M315 1060H535" class="msg"/><text x="425" y="1053" text-anchor="middle" class="label">POST /query</text>
+  <path d="M535 1095H1222" class="blue"/><text x="878" y="1088" text-anchor="middle" class="label">Search real event timeline</text>
+  <path d="M1222 1130H535" class="ret"/><text x="878" y="1123" text-anchor="middle" class="label">Events + timestamps + evidence metadata</text>
+  <path d="M535 1165H315" class="ret"/><text x="425" y="1158" text-anchor="middle" class="label">Evidence-backed answer</text>
+  <path d="M315 1200H115" class="ret"/><text x="215" y="1193" text-anchor="middle" class="label">Answer + evidence links</text>
+
+  <rect x="48" y="1260" width="1344" height="112" rx="12" fill="#121c29" stroke="#334760"/>
+  <text x="72" y="1295" class="head">Notes</text>
+  <text x="72" y="1323" class="small">• Motion labels are estimated from track movement; complex actions are not guaranteed by the live camera path.</text>
+  <text x="72" y="1348" class="small">• MiniFASNet liveness is an unvalidated signal. PostgreSQL is the source of truth; Redis caches selected reads.</text>
+</svg>

@@ -1,0 +1,35 @@
+opencv-contrib-python>=4.10.0
+numpy>=1.26.0
+
+# object detection + tracking
+ultralytics>=8.3.0
+
+# face / anti-spoof ONNX inference
+onnxruntime>=1.20.0
+
+# vector index
+turbovec==1.0.0
+
+# query API
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+python-multipart>=0.0.12
+prometheus-client>=0.21.0
+
+# persistence
+psycopg[binary,pool]>=3.2.0
+redis>=5.0.0
+minio>=7.2.0
+
+# action recognition (VideoMAE) and VLM client
+transformers>=4.48.0
+torch>=2.5.0
+av>=14.0.0
+
+# auth for the API
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# tests
+pytest>=8.3.0

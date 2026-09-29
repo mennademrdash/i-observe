@@ -1,0 +1,5 @@
+[
+  {"id":"black-clothing-restricted-zone","when":{"shirt_color":"black","event_type":"entered_restricted_zone"},"severity":"high"},
+  {"id":"unattended-object","when":{"event_type":"left_object"},"severity":"critical"},
+  {"id":"rapid-motion","when":{"event_type":"moving quickly"},"severity":"medium"}
+]
