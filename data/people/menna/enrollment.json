@@ -1,0 +1,40 @@
+{
+  "identity": "MENNA",
+  "point_ids": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+  ],
+  "accepted": [
+    {
+      "path": "data\\people\\menna\\01.jpeg",
+      "confidence": 0.8047184348106384
+    },
+    {
+      "path": "data\\people\\menna\\02.jpeg",
+      "confidence": 0.8315382599830627
+    },
+    {
+      "path": "data\\people\\menna\\03.jpeg",
+      "confidence": 0.8445268869400024
+    },
+    {
+      "path": "data\\people\\menna\\04.jpeg",
+      "confidence": 0.853470504283905
+    },
+    {
+      "path": "data\\people\\menna\\05.jpeg",
+      "confidence": 0.8405203223228455
+    },
+    {
+      "path": "data\\people\\menna\\06.jpeg",
+      "confidence": 0.8559412956237793
+    }
+  ],
+  "rejected": [],
+  "vectors_used": 6,
+  "dimension": 512
+}

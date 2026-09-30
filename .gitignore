@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+data/.auth_secret
 
 # Credentials / key material
 *.pem
@@ -12,14 +13,10 @@
 .hf-cache/
 .pip-cache/
 .tmp/
-models/
 yolo11n.pt
-*.onnx
-*.pt
 
 # Datasets and generated artifacts
 data/datasets/
-data/
 evidence/
 clips/
 outputs/
@@ -40,6 +37,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .codex-presentation-build/
+
+# Temp / lab
+duckdb_lab/
+events.sqlite-journal
 
 # Diagnostics
 .docker-state-*.txt

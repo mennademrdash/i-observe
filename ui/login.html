@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>I-Observe · Sign in</title>
+<style>
+:root{
+  --bg:#040404; --panel:#0B0B0C; --panel2:#111214;
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.12);
+  --txt:#F4F4F4; --muted:#9E9F9F; --dim:#6E6F70;
+  --lime:#D7DBDE; --lime-ink:#0B0C0D;
+  --err:#FF7A7A; --ok:#D7DBDE;
+  --r:16px; --font:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.55 var(--font);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+body:before{content:"";position:absolute;width:700px;height:700px;left:50%;top:-350px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(215,219,222,.06),transparent 60%);pointer-events:none}
+#glow{position:fixed;left:0;top:0;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(215,219,222,.07),transparent 60%);opacity:0;transition:opacity .35s}
+.wrap{position:relative;z-index:1;width:min(420px,100%)}
+.logo{display:flex;align-items:center;gap:11px;justify-content:center;margin-bottom:22px}
+.mark{width:40px;height:40px;border-radius:12px;background:var(--lime);color:#0B0C0D;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo h1{font-size:19px;letter-spacing:-.3px}.logo p{font-size:10px;color:var(--muted);letter-spacing:1.6px}
+.card{position:relative;background:linear-gradient(180deg,#0D0D0E,#0A0A0B);border:1px solid var(--line);border-radius:var(--r);padding:28px;overflow:hidden}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s;background:radial-gradient(300px circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.09),transparent 65%)}
+.card:hover::after{opacity:1}
+.tabs{display:flex;gap:6px;background:#080809;border:1px solid var(--line);border-radius:11px;padding:4px;margin-bottom:20px}
+.tabs button{flex:1;background:transparent;color:var(--muted);border:0;padding:9px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+.tabs button.on{background:var(--lime);color:var(--lime-ink)}
+label{display:block;font-size:10.5px;color:var(--muted);margin:0 0 6px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.field{margin-bottom:14px;position:relative;z-index:1}
+input{width:100%;background:#080809;border:1px solid var(--line2);color:var(--txt);padding:11px 13px;border-radius:10px;outline:none;font-family:inherit;font-size:14px}
+input:focus{border-color:rgba(215,219,222,.55);box-shadow:0 0 0 3px rgba(215,219,222,.12)}
+button.go{width:100%;background:var(--lime);color:var(--lime-ink);border:0;padding:12px;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;position:relative;z-index:1}
+button.go:hover{filter:brightness(1.07)}button.go:disabled{opacity:.45;cursor:not-allowed}
+.msg{display:none;padding:11px 13px;border-radius:10px;font-size:13px;margin-top:14px;position:relative;z-index:1}
+.msg.s{display:block}.msg.err{background:rgba(255,122,122,.08);border:1px solid rgba(255,122,122,.3);color:var(--err)}
+.msg.ok{background:rgba(215,219,222,.07);border:1px solid rgba(215,219,222,.3);color:var(--lime)}
+.hint{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){#glow{display:none}.card::after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><div class="mark">IO</div><div><h1>I-Observe</h1><p>VIDEO INTELLIGENCE</p></div></div>
+  <div class="card" id="card">
+    <div class="tabs"><button id="tLogin" class="on" type="button">Sign in</button><button id="tReg" type="button">Register</button></div>
+    <div class="field"><label>Username</label><input id="u" autocomplete="username" placeholder="operator" maxlength="32" /></div>
+    <div class="field"><label>Password</label><input id="p" type="password" autocomplete="current-password" placeholder="••••••••" /></div>
+    <button class="go" id="go">SIGN IN</button>
+    <div class="msg" id="m"></div>
+    <div class="hint" id="hint">Registered operators sign in to open the console.</div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let mode='login';
+function setMode(m){mode=m;$('#tLogin').classList.toggle('on',m==='login');$('#tReg').classList.toggle('on',m==='register');
+ $('#go').textContent=m==='login'?'SIGN IN':'CREATE ACCOUNT';
+ $('#hint').textContent=m==='login'?'Registered operators sign in to open the console.':'3-32 chars (letters, digits, . _ -) · password 8+ chars.';$('#m').className='msg';}
+$('#tLogin').addEventListener('click',()=>setMode('login'));
+$('#tReg').addEventListener('click',()=>setMode('register'));
+async function submit(){
+ const u=$('#u').value.trim(),p=$('#p').value;
+ if(!u||!p){$('#m').className='msg s err';$('#m').textContent='Enter username and password.';return;}
+ $('#go').disabled=true;$('#m').className='msg';
+ try{
+  const r=await fetch('/api/auth/'+mode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok)throw new Error((j&&j.detail)||('HTTP '+r.status));
+  try{localStorage.setItem('io_token',j.token);}catch(e){}
+  $('#m').className='msg s ok';$('#m').textContent='Welcome, '+j.username+' — opening console…';
+  setTimeout(()=>location.href='/',500);
+ }catch(e){$('#m').className='msg s err';$('#m').textContent=e.message;}
+ finally{$('#go').disabled=false;}
+}
+$('#go').addEventListener('click',submit);
+[$('#u'),$('#p')].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')submit();}));
+/* cursor reflection */
+const glow=document.createElement('div');glow.id='glow';document.body.appendChild(glow);
+let on=false;const card=$('#card');
+document.addEventListener('pointermove',e=>{
+ glow.style.transform='translate('+e.clientX+'px,'+e.clientY+'px)';
+ if(!on){glow.style.opacity='1';on=true;}
+ const r=card.getBoundingClientRect();
+ card.style.setProperty('--gx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+ card.style.setProperty('--gy',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+},{passive:true});
+</script>
+</body>
+</html>

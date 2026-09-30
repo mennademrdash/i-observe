@@ -1,0 +1,11 @@
+{
+  "release": "models-v1",
+  "models": [
+    {"file":"yolo11n-pose_widerface.pt","role":"YOLO11 WIDERFace detection and 5 landmarks","sha256":"766dd11cc89dff5b13b96db891b4e0da9b3392ecfcd864c641c8258d496c17e8"},
+    {"file":"auraface_glintr100.onnx","role":"AuraFace 512-D identity embeddings","sha256":"a7933ea5330113b01c9b60351d8f4c33003f145d8470ac5f0e52ee2effe25c60"},
+    {"file":"minifasnet_v2.onnx","role":"MiniFASNetV2 liveness signal","sha256":"d7b3cd9ba8a7ceb13baa8c4720902e27ca3112eff52f926c08804af6b6eecc7b"},
+    {"file":"sface.onnx","role":"OpenCV SFace fallback","sha256":"0ba9fbfa01b5270c96627c4ef784da859931e02f04419c829e83484087c34e79"},
+    {"file":"yunet.onnx","role":"OpenCV YuNet fallback detector","sha256":"8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4"},
+    {"file":"yolov8n.pt","role":"Person and object detection","sha256":"f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36"}
+  ]
+}
