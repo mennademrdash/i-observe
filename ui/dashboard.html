@@ -344,6 +344,7 @@ function go(v){if(!$('#v-'+v))return;$$('.view').forEach(x=>x.classList.remove('
  $$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
  const t=T[v]||['I-observe',''];$('#pgTitle').textContent=t[0];$('#pgSub').textContent=t[1];location.hash=v;
  syncLiveDock(v);
+ if(v==='live'&&!stream&&!$('#camStart').disabled)$('#camStart').click();
  if(v==='status')loadStatus();
  if(v==='events')loadEvents();
  if(v==='evidence')loadEvidence();
@@ -616,7 +617,8 @@ async function detectFrame(){
   const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.9));
   if(!blob)return;
   const fd=new FormData();fd.append('image',blob,'capture.jpg');fd.append('annotate','false');
-  const r=await API(recording?'/api/live/observe':'/api/camera/detect',{method:'POST',body:fd});
+  const r=await API('/api/camera/detect',{method:'POST',body:fd});
+  if(r.recording_error)msg('#mCam','err','Recording failed: '+esc(r.recording_error));
   if(r.face_count!=null&&r.face_count===0)$('#liveWho').innerHTML='Recognised: <b>no face detected</b>';
   if(recording&&r.recorded===0&&r.face_count>0)$('#camHint').textContent='Detected '+r.face_count+' face(s); no event saved. Check liveness/backend status.';
     const det=r.detections||(r.last?[r.last]:[]);
@@ -627,11 +629,11 @@ async function detectFrame(){
   $('#camHint').textContent=det.length
    ?'Live stream - '+det.length+' face(s) - '+Math.round(performance.now()-startedAt)+' ms - '+new Date().toLocaleTimeString()
    :'Live stream - no face in frame - '+new Date().toLocaleTimeString();
-  const me=det.filter(d=>d.identity&&['unknown','spoof_rejected','rejected_spoof','align_error','no_face'].indexOf(d.identity)===-1)[0];
-  $('#liveWho').innerHTML='Recognised: <b>'+esc(me?me.identity:(det.length?det[0].identity:'no face'))+'</b>';
+  const names=[...new Set(det.filter(d=>d.identity&&['unknown','spoof_rejected','rejected_spoof','align_error','no_face','turbovec_error','liveness_error'].indexOf(d.identity)===-1).map(d=>d.identity))];
+  $('#liveWho').innerHTML='Recognised: <b>'+esc(names.length?names.join(', '):(det.length?'unknown':'no face'))+'</b>';
   $('#liveDet').innerHTML=det.length?det.map(d=>'<div class="kv"><span>'+esc(d.identity)+'</span><span>'+pct(d.score)+' - '+(d.live?badge('ok','LIVE '+pct(d.liveness_score)):badge('err','SPOOF'))+'</span></div>').join('')
    :'<div class="sub">no face in frame</div>';
-  if(r.last)pushLiveRow(r.last);
+  if(r.events_recorded!==window.lastRecordedCount){(r.observations||[]).forEach(pushLiveRow);window.lastRecordedCount=r.events_recorded;}
   if(recording)$('#liveStats').innerHTML=[['Events Recorded',r.events_recorded],['Session',r.session||'-'],['Frames',LIVE_FRAMES],['',badge('err','RECORDING')]].map(([k,val])=>'<div class="card" style="background:var(--panel2)"><h3>'+k+'</h3><div class="stat sm">'+val+'</div></div>').join('');
   const now=performance.now();
   if(LIVE_LAST_T){const dt=(now-LIVE_LAST_T)/1000;LIVE_FPS=LIVE_FPS*0.7+(1/Math.max(dt,0.001))*0.3;
@@ -671,6 +673,7 @@ async function startRecordingSession(){
 $('#camStart').addEventListener('click',async()=>{
  if(stream)return;
  $('#camStart').disabled=true;
+ $('#camHint').textContent='Opening camera — allow camera access if your browser asks.';
  try{
   const v=$('#cam');
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
@@ -744,7 +747,7 @@ $('#vlmTest').addEventListener('click',async()=>{
 
 loadStatus();loadCounters();loadEvidence();
 setInterval(()=>{loadStatus();loadCounters();},15000);
-if(location.hash.slice(1)&&$('#v-'+location.hash.slice(1)))go(location.hash.slice(1));
+go(location.hash.slice(1)&&$('#v-'+location.hash.slice(1))?location.hash.slice(1):'live');
 </script>
 </body>
 </html>

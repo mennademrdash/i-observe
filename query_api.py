@@ -1,6 +1,7 @@
 import config  # noqa: F401  # loads .env, sets BLAS caps, before numpy/OpenCV load
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import glob
 import json
 import os
@@ -37,6 +38,11 @@ _scene_lock = threading.Lock()
 _scene_analyzer = None
 _redis_cache = None
 _redis_lock = threading.Lock()
+_face_inference_lock = threading.Lock()
+_record_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="live-record")
+_record_future = None
+_record_result = {}
+_record_error = None
 
 ROOT = Path(__file__).resolve().parent
 UI_DIR = ROOT / "ui"
@@ -74,6 +80,18 @@ def _check_auth(authorization: str | None) -> None:
     expected = os.getenv("API_TOKEN")
     if expected and authorization != f"Bearer {expected}":
         raise HTTPException(401, "Invalid bearer token")
+
+
+
+@app.on_event("startup")
+async def warm_face_models():
+    async def warm():
+        try:
+            await asyncio.to_thread(analyse_faces, np.zeros((480, 640, 3), np.uint8))
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Face model warm-up failed")
+    app.state.face_warmup = asyncio.create_task(warm())
 
 
 def redis_cache():
@@ -367,8 +385,14 @@ async def api_live_observe(
     frame = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
     if frame is None:
         raise HTTPException(422, "Image could not be decoded")
+    return await asyncio.to_thread(record_live_frame, frame, session)
+
+
+
+def record_live_frame(frame, session=None, analysis=None):
+    recorded_now = []
     try:
-        results, face_count, frame_size = analyse_faces(frame)
+        results, face_count, frame_size = analysis if analysis is not None else analyse_faces(frame)
     except Exception as exc:
         raise HTTPException(503, f"Face detection/recognition integration failed: {type(exc).__name__}: {exc}")
     LIVE["frames"] += 1
@@ -414,7 +438,6 @@ async def api_live_observe(
     # embedding, identity and observation row. A spoof or failing face never
     # suppresses the others.
     sess = session or LIVE.get("session") or "live_manual"
-    store = EventStore(event_db_path())
     outdir = ROOT / "evidence" / sess
     outdir.mkdir(parents=True, exist_ok=True)
     now = time.time()
@@ -504,7 +527,6 @@ async def api_live_observe(
             evidence=ev_payload,
             clip=None,
         )
-        store.add(**event)
         # PostgreSQL is the system of record for live events. Verify each commit by
         # reading the inserted UUID back; report failure instead of silently degrading.
         pg = postgres_events()
@@ -574,6 +596,12 @@ PAD_Y = 0.12   # 12% each side vertically
 
 
 def analyse_faces(frame):
+    with _face_inference_lock:
+        return _analyse_faces(frame)
+
+
+
+def _analyse_faces(frame):
     """Run the full face stack on EVERY face YuNet found in one frame.
 
     Returns (results, detections_used, original_size). Each result is independent: its own
@@ -677,13 +705,30 @@ async def api_camera_detect(
     frame = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
     if frame is None:
         raise HTTPException(422, "Image could not be decoded")
-    results, face_count, frame_size = analyse_faces(frame)
-    try:
-        scene = live_scene(frame, results)
-    except Exception as exc:
-        scene = {"tracks": [], "objects": [], "error": f"{type(exc).__name__}: {exc}"}
-    associate_face_tracks(results, scene.get("tracks", []))
-    payload = {"detections": results, "face_count": face_count, "frame_size": list(frame_size), "scene": scene}
+    started = time.perf_counter()
+    results, face_count, frame_size = await asyncio.to_thread(analyse_faces, frame)
+    # One background observation at a time: no stale-frame queue, duplicate face
+    # inference, or database/VLM latency on the camera's response path.
+    global _record_future, _record_result, _record_error
+    if _record_future is not None and _record_future.done():
+        try:
+            _record_result = _record_future.result()
+            _record_error = None
+        except Exception as exc:
+            _record_error = f"{type(exc).__name__}: {exc}"
+        _record_future = None
+    if LIVE["recording"] and _record_future is None:
+        import copy
+        _record_future = _record_executor.submit(
+            record_live_frame, frame.copy(), LIVE.get("session"),
+            (copy.deepcopy(results), face_count, frame_size),
+        )
+    payload = {"detections": results, "face_count": face_count, "frame_size": list(frame_size),
+               "inference_ms": round((time.perf_counter()-started)*1000, 1),
+               "events_recorded": LIVE["events"], "session": LIVE.get("session"),
+               "last": _record_result.get("last"),
+               "observations": _record_result.get("observations", []),
+               "recording_error": _record_error}
     if not annotate:
         return payload
     frame_h, frame_w = frame.shape[:2]

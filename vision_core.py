@@ -152,9 +152,11 @@ def _onnx_session(model: str):
 
     options = ort.SessionOptions()
     options.log_severity_level = 3
+    options.intra_op_num_threads = min(4, os.cpu_count() or 1)
+    options.inter_op_num_threads = 1
     options.enable_cpu_mem_arena = False
     options.enable_mem_pattern = False
-    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_BASIC
+    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 
     try:
         return ort.InferenceSession(str(path), options, providers=["CPUExecutionProvider"])
